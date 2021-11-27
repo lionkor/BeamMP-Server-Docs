@@ -1,4 +1,4 @@
-# Lua After v2.4.0
+**To BeamMP Staff: Do __NOT__ edit this wiki. It's still heavily WIP.**
 
 # Introduction
 
@@ -93,7 +93,7 @@ You can do a lot more with events, but those possibilities will be covered in de
 
 Pre-v2.4.0 Lua had a concept of "threads" which run X times per second. This naming was slightly misleading, as they were synchronous.
 
-Post-v2.4.0 Lua instead has "Event Timers". Theses are timers which run inside the server, and once they run out, they trigger an event (globally). This is also synchronous. Please be aware that the second argument is an interval in milliseconds.
+Post-v2.4.0 Lua instead has "Event Timers". These are timers which run inside the server, and once they run out, they trigger an event (globally). This is also synchronous. Please be aware that the second argument is an interval in milliseconds.
 
 Example:
 
@@ -352,6 +352,103 @@ You can see an up-to-date list of these by printing them, like so:
 print(MP.Settings)
 ```
 
+# Events
+
+## Explanation
+
+- Arguments: List of arguments given to handlers of this event
+- Cancellable: Whether the event can be cancelled. If it can be cancelled, a handler can do so by returning `1`, like `return 1`.
+
+## Summary of events
+
+A player join triggers the following events in the given order:
+
+1. `onPlayerAuth`
+2. `onPlayerConnecting`
+3. `onPlayerJoining`
+4. `onPlayerJoin`
+
+## System Events
+
+### `onInit`
+
+Arguments: NONE
+Cancellable: NO
+
+Triggered right after all files in the plugin were initialized.
+
+### `onShutdown`
+
+Arguments: NONE
+Cancellable: NO
+
+Triggered when the server shuts down. Currently happens after all players were kicked.
+
+## Game-Related Events
+
+### `onPlayerAuth`
+
+Arguments: `player_name: string`, `player_role: string`, `is_guest: bool`
+Cancellable: YES
+
+First event that gets triggered when a player wants to join.
+
+### `onPlayerConnecting`
+
+Arguments: `player_id: number`
+Cancellable: NO
+
+Triggered when a player first starts connecting, after `onPlayerAuth`.
+
+### `onPlayerJoining`
+
+Arguments: `player_id: number`
+Cancellable: NO
+
+Triggered when a player has finished loading all mods, after `onPlayerConnecting`.
+
+### `onPlayerDisconnect`
+
+Arguments: `player_id: number`
+Cancellable: NO
+
+Triggered when a player disconnects.
+
+### `onChatMessage`
+
+Arguments: `player_id: number`, `player_name: string`, `message: string`
+Cancellable: YES
+
+Triggered when a player sends a chat message. When cancelled, it will not show the chat message to anyone, not even the player who sent it.
+
+### `onVehicleSpawn`
+
+Arguments: `player_id: number`, `vehicle_id: number`, `data: string`
+Cancellable: YES
+
+Triggered when a player spawns a new vehicle. The `data` argument contains the car's config as json. When cancelled, the car is not spawned.
+
+### `onVehicleEdited`
+
+Arguments: `player_id: number`, `vehicle_id: number`, `data: string`
+Cancellable: YES
+
+Triggered when a player edits their vehicle and applies the edit. The `data` argument contains the car's change config as json. When cancelled, the edit is not applied.
+
+### `onVehicleDeleted`
+
+Arguments: `player_id: number`, `vehicle_id: number`
+Cancellable: NO
+
+Triggered when a player deletes their vehicle.
+
+### `onVehicleReset`
+
+Arguments: `player_id: number`, `vehicle_id: number`, `data: string`
+Cancellable: NO
+
+Triggered when a player resets their vehicle. `data` is the car's data as json.
+
 # Migrating from old Lua
 
 This is a short run-down of the basic steps to take to migrate from old to new lua.
@@ -365,7 +462,7 @@ It's necessary to do the next steps properly.
 
 First, you should search and replace all MP functions. The substitution should add an `MP.` infront of all MP functions, except `print()`.
 
-Example:
+Example:
 
 ```lua
 local players = GetPlayers()
