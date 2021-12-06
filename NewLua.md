@@ -114,6 +114,70 @@ MP.CreateEventTimer("EverySecond", 1000)
 
 This will cause "CountSeconds" to be called every second. You can also cancel event timers with `MP.CancelEventTimer` (see API reference)
 
+### Debugging
+
+Lua is difficult to debug. An industry-grade debugger like `gdb` sadly doesn't exist for embedded Lua.
+
+Generally, you can of course simple `print()` the values you want to inspect at any time. 
+
+In v2.4.0, the server provides a way for you to inject an interpreter into a plugin and subsequently run Lua inside it in realtime. This is the closest we have to a debugger.
+
+Assuming you have the plugin from above which we called `MyPlugin`, you can enter into its Lua state like so:
+
+```
+> lua MyPlugin
+```
+
+Capitalisation matters here, so be careful its entered correctly. 
+The output is
+```
+Entered Lua console for state 'MyPlugin'. To exit, type `exit()`
+lua @MyPlugin> 
+```
+As you can see, we switched into the Lua state for `MyPlugin`. From now on until we enter `exit()`, we will be in `MyPlugin` and can execute Lua there. 
+
+For example, if we have a global called `MyValue`, we can print that value like so:
+
+```
+lua @MyPlugin> print(MyValue)
+```
+
+You can call functions here and do anything you expect to be able to do. 
+
+WARNING: Sadly, if the Lua state is currently busy executing other code (like a `while` loop), this can fully hang the console until it finishes that work, so be very careful switching to states which may be waiting for something to happen.
+
+### Custom Commands
+
+In order to implement custom commands for the server console, the event `onConsoleInput` can be used. 
+This can be useful when you want to add a way for the server owner to signal something to your plugin, or to display internal state in a custom way.
+
+Here's an example:
+
+```lua
+function handleConsoleInput(cmd)
+    local delim = cmd:find(' ')
+    if delim then
+        local message = cmd:sub(delim+1)
+        if cmd:sub(1, delim-1) == "print" then
+            return message
+        end
+    end
+end
+
+MP.RegisterEvent("onConsoleInput", "handleConsoleInput")
+```
+
+This will enable you to do the following in the server's console:
+
+```
+> print hello, world
+hello, world
+```
+
+We implemented our own `print`. As an exercise, try to build a function like `say`, which sends a chat message to all players, or even a specific player (with `MP.SendChatMessage`).
+
+**Caution:** For your own plugins, it's generally recommended to "namespace" them. Our `print` example, in a plugin called `mystuff`, could be called `mystuff.print` or `ms.print` or similar.
+
 # API Reference
 
 Documentation format: `function_name(arg_name: arg_type, arg_name: arg_type) -> return_types`
