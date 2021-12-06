@@ -6,9 +6,8 @@ The Server's Plugin system uses [Lua 5.3](https://www.lua.org/manual/5.3/). This
 
 For a migration guide from pre-v2.4.0 lua, go to the section ["Migrating from old Lua"](#migrating-from-old-lua).
 
-## How to Start Writing a Plugin
 
-### Directory Structure
+## Directory Structure
 
 Server plugins, unlike mods, are situated (by default) in `Resources/Server`, while mods, which are written for BeamNG.drive and are sent to the clients are in `Resources/Client`. Each plugin must have it's own subfolder in `Resources/Server`, for example for a plugin called "MyPlugin", the structure would be:
 
@@ -26,7 +25,7 @@ Here we also display another plugin called "SomeOtherPlugin", to illustrate how 
 You also notice the `main.lua`. You can have as many Lua `.lua` files as you like. All Lua files in your plugin's main directory are loaded in *alphabetical order* (so `aaa.lua` is run before `bbb.lua`).
 
 
-### Lua Files
+## Lua Files
 
 Each Lua `.lua` file in the plugin's folder is loaded on server startup. This means that statements outside of functions are evaluated ("run") immediately.
 
@@ -44,7 +43,7 @@ print("What's up!")
 
 When the server starts and the `main.lua` is loaded, it will run `print("What's up!")` *immediately*, but will **NOT** *call* the `PrintMyName` function yet (because it wasn't called)!
 
-### Events
+## Events
 
 An event is something like "a player is joining", "a player sent a chat message", "a player spawned a vehicle".
 
@@ -70,7 +69,7 @@ MP.RegisterEvent("onChatMessage", "MyChatMessageHandler")
 
 This will effectively make sure that any message that is exactly equal to "darn" will not be sent and won't show in chat. Cancelling an event causes it to not happen, for example a chat message not to be shown to anyone else, a vehicle not to be spawned, etc.
 
-### Custom Events
+## Custom Events
 
 You can register to any event you like, for example:
 
@@ -89,7 +88,7 @@ MP.TriggerLocalEvent("MyCoolCustomEvent")
 
 You can do a lot more with events, but those possibilities will be covered in detail below in the API reference.
 
-### Event Timers ("Threads")
+## Event Timers ("Threads")
 
 Pre-v2.4.0 Lua had a concept of "threads" which run X times per second. This naming was slightly misleading, as they were synchronous.
 
@@ -114,7 +113,7 @@ MP.CreateEventTimer("EverySecond", 1000)
 
 This will cause "CountSeconds" to be called every second. You can also cancel event timers with `MP.CancelEventTimer` (see API reference)
 
-### Debugging
+## Debugging
 
 Lua is difficult to debug. An industry-grade debugger like `gdb` sadly doesn't exist for embedded Lua.
 
@@ -146,7 +145,7 @@ You can call functions here and do anything you expect to be able to do.
 
 WARNING: Sadly, if the Lua state is currently busy executing other code (like a `while` loop), this can fully hang the console until it finishes that work, so be very careful switching to states which may be waiting for something to happen.
 
-### Custom Commands
+## Custom Commands
 
 In order to implement custom commands for the server console, the event `onConsoleInput` can be used. 
 This can be useful when you want to add a way for the server owner to signal something to your plugin, or to display internal state in a custom way.
