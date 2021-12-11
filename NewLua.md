@@ -2,9 +2,11 @@
 
 # Introduction
 
-The Server's Plugin system uses [Lua 5.3](https://www.lua.org/manual/5.3/). This section details how to get started writing plugins, teaches some basic concepts and gets you started with your first plugin. **It is recommended you read this section even if you know the pre-v2.4.0 system, as a few things changed drastically**.
+BeamMP-Server release v3.0.0 does some drastic changes to the way the Lua plugin system works. There is no way to use the old lua with a new server, so you'll have to migrate.
 
-For a migration guide from pre-v2.4.0 lua, go to the section ["Migrating from old Lua"](#migrating-from-old-lua).
+The Server's Plugin system uses [Lua 5.3](https://www.lua.org/manual/5.3/). This section details how to get started writing plugins, teaches some basic concepts and gets you started with your first plugin. **It is recommended you read this section even if you know the pre-v3.0.0 system, as a few things changed drastically**.
+
+For a migration guide from pre-v3.0.0 lua, go to the section ["Migrating from old Lua"](#migrating-from-old-lua).
 
 
 ## Directory Structure
@@ -67,7 +69,7 @@ end
 MP.RegisterEvent("onChatMessage", "MyChatMessageHandler")
 ```
 
-This will effectively make sure that any message that is exactly equal to "darn" will not be sent and won't show in chat. Cancelling an event causes it to not happen, for example a chat message not to be shown to anyone else, a vehicle not to be spawned, etc.
+This will effectively make sure that any message that is exactly equal to "darn" will not be sent and won't show in chat (note that for a real profanity filter you'd want to see if the message *contains* "darn", not *is* "darn"). Cancelling an event causes it to not happen, for example a chat message not to be shown to anyone else, a vehicle not to be spawned, etc.
 
 ## Custom Events
 
@@ -90,9 +92,9 @@ You can do a lot more with events, but those possibilities will be covered in de
 
 ## Event Timers ("Threads")
 
-Pre-v2.4.0 Lua had a concept of "threads" which run X times per second. This naming was slightly misleading, as they were synchronous.
+Pre-v3.0.0 Lua had a concept of "threads" which run X times per second. This naming was slightly misleading, as they were synchronous.
 
-Post-v2.4.0 Lua instead has "Event Timers". These are timers which run inside the server, and once they run out, they trigger an event (globally). This is also synchronous. Please be aware that the second argument is an interval in milliseconds.
+v3.0.0 Lua instead has "Event Timers". These are timers which run inside the server, and once they run out, they trigger an event (globally). This is also synchronous. Please be aware that the second argument is an interval in milliseconds.
 
 Example:
 
@@ -111,7 +113,9 @@ MP.RegisterEvent("EverySecond", "CountSeconds")
 MP.CreateEventTimer("EverySecond", 1000)
 ```
 
-This will cause "CountSeconds" to be called every second. You can also cancel event timers with `MP.CancelEventTimer` (see API reference)
+This will cause "CountSeconds" to be called every second. You can also cancel event timers with `MP.CancelEventTimer` (see API reference).
+
+From the server's console, you can run `status` to see how many event timers are currently running, as well as info about event handlers that are waiting. This command will show more information in the future.
 
 ## Debugging
 
@@ -119,7 +123,7 @@ Lua is difficult to debug. An industry-grade debugger like `gdb` sadly doesn't e
 
 Generally, you can of course simple `print()` the values you want to inspect at any time. 
 
-In v2.4.0, the server provides a way for you to inject an interpreter into a plugin and subsequently run Lua inside it in realtime. This is the closest we have to a debugger.
+In v3.0.0, the server provides a way for you to inject an interpreter into a plugin and subsequently run Lua inside it in realtime. This is the closest we have to a debugger.
 
 Assuming you have the plugin from above which we called `MyPlugin`, you can enter into its Lua state like so:
 
@@ -144,6 +148,8 @@ lua @MyPlugin> print(MyValue)
 You can call functions here and do anything you expect to be able to do. 
 
 WARNING: Sadly, if the Lua state is currently busy executing other code (like a `while` loop), this can fully hang the console until it finishes that work, so be very careful switching to states which may be waiting for something to happen.
+
+Additionally, you can run `status` in the regular console (`> `), which will show you some statistics about Lua, among other things.
 
 ## Custom Commands
 
@@ -226,7 +232,7 @@ Returns the name of the current OS, either `Windows`, `Linux` or `Other`.
 
 ## `MP.GetServerVersion() -> number,number,number`
 
-Returns the current server version in major, minor, patch format. For example, the v2.4.0 version would return `2, 4, 0`.
+Returns the current server version in major, minor, patch format. For example, the v3.0.0 version would return `3, 0, 0`.
 
 Example:
 
