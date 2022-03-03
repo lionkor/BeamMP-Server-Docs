@@ -538,7 +538,7 @@ Restores the arbitrary nesting of a JSON value that has been flattened before us
 
 ## `MP.JsonDiff(a: string, b: string) -> string`
 
-Creates a JSON diff according to RFC 6902 (http://jsonpatch.com/). This diff can then be applied as a patch via `MP.JsonPatch()`. Returns the diff.
+Creates a JSON diff according to RFC 6902 (http://jsonpatch.com/). This diff can then be applied as a patch via `MP.JsonDiffApply()`. Returns the diff.
 
 ## `MP.JsonDiffApply(base: string, diff: string) -> string`
 
