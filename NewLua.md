@@ -425,6 +425,8 @@ print(MP.Settings)
 
 # `MP.Json*`
 
+Since BeamMP-Server `v3.1.0`.
+
 This is a builtin JSON library, which is usually much faster than any Lua JSON library. Behind the scenes, C++'s `nlohmann::json` library is used, which is JSON compliant, full-coverage unit tested and continuously being fuzzed.
 
 ## `MP.JsonEncode(table: table) -> string`
