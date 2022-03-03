@@ -334,11 +334,13 @@ In the game, this will not appear as a directed message.
 
 You can use this, for example, to tell a player *why* you cancelled their vehicle spawn, chat message, or similar, or to display some information about your server.
 
-## `MP.TriggerClientEvent(player_id: number, event_name: string, data: string)`
+## `MP.TriggerClientEvent(player_id: number, event_name: string, data: string) -> boolean`
 
-// TODO Documentation incomplete
+Will call the given event with the given data on the specified client (-1 for broadcast). This event can then be handled in a clientside lua mod, see the "Client Scripting" documentation for this.
 
-Will call that event with the given data on the specified client (-1 for broadcast).
+Will return `true` if it was able to send the message (for `id = -1`, so broadcasts, its always `true`), and `false` if the player with that ID doesn't exist or is disconnected but still has an ID (this is a known issue).
+
+If `false` is returned, it makes no sense to retry this event, and a response (if any was expected) shouldn't be expected.
 
 ## `MP.GetPlayerCount() -> number`
 
