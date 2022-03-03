@@ -423,6 +423,249 @@ You can see an up-to-date list of these by printing them, like so:
 print(MP.Settings)
 ```
 
+# `MP.Json*`
+
+This is a builtin JSON library, which is usually much faster than any Lua JSON library. Behind the scenes, C++'s `nlohmann::json` library is used, which is JSON compliant, full-coverage unit tested and continuously being fuzzed.
+
+## `MP.JsonEncode(table: table) -> string`
+
+Encodes a Lua table into a JSON string, recursively (tables inside tables inside tables ... work as expected). All primitive types are respected, functions, userdata and similar are ignored.
+
+The resulting JSON is minified and can be pretty-printed by using `MP.JsonPrettify` to prettify it.
+
+Example: 
+```lua
+local player = {
+	name = "Lion",
+	age = 69,
+	skills = { "skill A", "skill B" }
+}
+local json = MP.JsonEncode(player)
+```
+
+Results in: 
+```json
+{"name":"Lion","age":69,"skills":["skill A","skill B"]}
+```
+
+## `MP.JsonDecode(json: string) -> table`
+
+Decodes JSON into a Lua table. Will return `nil` if this failed, and print an error.
+
+Example:
+```lua
+local json = "{\"message\":\"OK\",\"code\":200}"
+local tbl = MP.JsonDecode(json)
+```
+
+Results in:
+```lua
+{
+	message = "OK",
+	code = 200,
+}
+```
+
+## `MP.JsonPrettify(json: string) -> string`
+
+Add indentation and newlines to the json to make it more readable for humans.
+
+Example:
+```
+local myjson = MP.JsonEncode({ name="Lion", age = 69, skills = { "skill A", "skill B" } })
+
+print(MP.JsonPrettify(myjson))
+```
+
+Results in:
+```json
+{
+    "age": 69.0,
+    "name": "Lion",
+    "skills": [
+        "skill A",
+        "skill B"
+    ]
+}
+```
+
+## `MP.JsonMinify(json: string) -> string`
+
+Removes indentation, newlines and any other whitespace. Not necessary unless you called `MP.JsonPrettify`, as all output from `MP.Json*` is already minified.
+
+Example:
+```lua
+local pretty = MP.JsonPrettify(MP.JsonEncode({ name="Lion", age = 69, skills = { "skill A", "skill B" } }))
+
+print(MP.JsonMinify(pretty))
+```
+
+Results in:
+```json
+{"age":69.0,"name":"Lion","skills":["skill A","skill B"]}
+```
+
+## `MP.JsonFlatten(json: string) -> string`
+
+Creates a JSON object whose key are flattened to JSON pointers, according to RFC 6901. You can restore the original with `MP.JsonUnflatten()`. For this to work, all values need to be primitives.
+
+Example:
+```lua
+local json = MP.JsonEncode({ name="Lion", age = 69, skills = { "skill A", "skill B" } })
+print("normal: " ..json)
+print("flattened: " .. MP.JsonFlatten(json))
+print("flattened pretty: " .. MP.JsonPrettify(MP.JsonFlatten(json)))
+
+```
+
+Results in: 
+```json
+normal: {"age":69.0,"name":"Lion","skills":["skill A","skill B"]}
+flattened: {"/age":69.0,"/name":"Lion","/skills/0":"skill A","/skills/1":"skill B"}
+flattened pretty: {
+    "/age": 69.0,
+    "/name": "Lion",
+    "/skills/0": "skill A",
+    "/skills/1": "skill B"
+}
+```
+
+## `MP.JsonUnflatten(json: string) -> string`
+
+Restores the arbitrary nesting of a JSON value that has been flattened before using the `MP.JsonFlatten()` function. 
+
+## `MP.JsonDiff(a: string, b: string) -> string`
+
+Creates a JSON diff according to RFC 6902 (http://jsonpatch.com/). This diff can then be applied as a patch via `MP.JsonPatch()`. Returns the diff.
+
+## `MP.JsonDiffApply(base: string, diff: string) -> string`
+
+Applies the JSON `diff` to `base` as a JSON patch (RFC 6902, http://jsonpatch.com/). Returns the result.
+
+# FS Functions
+
+`FS` functions are **f**ile**s**ystem functions, which aim to be better than the default Lua capabilities.
+
+Please always use `/` as a separator when specifying paths, as this is cross-platform (windows, linux, macos, ...).
+
+## `FS.CreateDirectory(path: string) -> bool,string`
+
+
+Creates the specified directory, and any parent directories if they don't exist. Behavior is roughly equivalent to the common linux command `mkdir -p`.
+
+Returns whether the operation had an error, and, if it *did*, an error message. This means that, if `true` is returned, an error occurred.
+
+Example:
+```lua
+local error, error_message = FS.CreateDirectory("data/mystuff/somefolder")
+
+if error then
+	print("failed to create directory: " .. error_message)
+else
+	-- do something with the directory
+end
+```
+
+## `FS.Remove(path: string) -> bool,string`
+
+Removes the specified file or folder.
+
+Returns `true` if an error occured, with an error message in the second return value.
+
+Example:
+```lua
+local error, error_message = FS.Remove("myfile.txt")
+
+if error then
+	print("failed to delete myfile: " .. error_message)
+end
+```
+
+## `FS.Rename(pathA: string, pathB: string) -> bool,string`
+
+Renames (or moves) `pathA` to `pathB`.
+
+Returns `true` if an error occured, with an error message in the second return value.
+
+## `FS.Copy(pathA: string, pathB: string) -> bool,string`
+
+Copies `pathA` to `pathB`.
+
+Returns `true` if an error occured, with an error message in the second return value.
+
+## `FS.GetFilename(path: string) -> string`
+
+Returns the last part of a path, which is usually the filename.
+Here are some example inputs + outputs:
+
+```lua
+input -> output
+
+"my/path/a.txt" 	-> "a.txt"
+"somefile.txt" 		-> "somefile.txt"
+"/awesome/path" 	-> "path"
+```
+
+## `FS.GetExtension(path: string) -> string`
+
+
+Returns the extension of the file, or an empty string if no extension exists.
+Here are some example inputs + outputs
+
+```lua
+input -> output
+
+"myfile.txt" 					-> ".txt"
+"somefile." 					-> "."
+"/awesome/path" 				-> ""
+"/awesome/path/file.zip.txt"	-> ".txt"
+"myexe.exe" 					-> ".exe"
+```
+
+
+## `FS.GetParentFolder(path: string) -> string`
+
+Returns the path to the parent directory, i.e. the folder a file or folder is contained in.
+Here are some example inputs + outputs:
+
+```lua
+input -> output
+
+"/var/tmp/example.txt" 		-> "/var/tmp"
+"/"							-> "/"
+"mydir/a/b/c.txt"			-> "mydir/a/b"
+```
+
+
+## `FS.Exists(path: string) -> bool`
+
+Returns `true` if the path exists, `false` if it doesn't.
+
+## `FS.IsDirectory(path: string) -> bool`
+
+Returns `true` if the specified path is a directory, `false` if it's not. Note that `false` does NOT imply that the path is a file (see `FS.IsFile()`).
+
+## `FS.IsFile(path: string) -> bool`
+
+Returns `true` if the specified path is a regular file (not a symlink, hardlink, block device, etc.), `false` if it's not. Note taht `false` does NOT imply that the path is a directory (see `FS.IsDirectory()`).
+
+## `FS.ConcatPaths(...) -> string`
+
+Adds together (concatenates) all arguments with the system's preferred path separator.
+
+Example:
+```lua  
+FS.ConcatPaths("a", "b", "/c/d/e/", "/f/", "g", "h.txt")
+```
+results in
+```
+a/b/c/d/e/f/g/h.txt
+```
+
+Also resolves `..`, if that exists in the path at any point. This function is safer than concatenating strings in lua, and respects the platform's separators.
+
+Please always use `/` as a separator when specifying paths, as this is cross-platform (windows, linux, macos, ...).
+
 # Events
 
 ## Explanation
