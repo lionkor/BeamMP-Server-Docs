@@ -255,7 +255,7 @@ For a list of events the server provides, see here (TODO link).
 
 If the event with that name doesn't exist, it's created, and thus RegisterEvent cannot fail. This can be used to create custom events.
 
-## `MP.CreateEventTimer(event_name: string, interval_ms: number)`
+## `MP.CreateEventTimer(event_name: string, interval_ms: number, [strategy: number (since v3.0.2)])`
 
 Starts a timer inside the server which triggers the event `event_name` every `interval_ms` milliseconds.
 
@@ -264,6 +264,13 @@ Event timers can be cancelled with `MP.CancelEventTimer`.
 Intervals <25 ms are not encouraged, as multiple such intervals will likely not be served in time reliably. While multiple timers can be started on the same event, it's encouraged to create as few event timers as possible. For example, if you need one event that runs every half second, and one which runs every second, consider just making the half-second one and running the every-second-functiosecond trigger.
 
 You may also use `MP.CreateTimer` to make a timer and measure time passed since the last event call, in order to minimize event timers, though this is not necessarily recommended as it increases the code complexity significantly.
+
+**Since 3.0.2:**
+
+An optional `CallStrategy` may be supplied as the third argument. This can be either:
+
+- `MP.CallStrategy.BestEffort` (default): Will try to get your event to trigger at the specified interval, but will refuse to queue handlers if a handler takes too long.
+- `MP.CallStrategy.Precise`: Will enqueue event handlers at the exact interval specified. Can lead to the queue filling up if the handler takes longer than the interval. Only use if you NEED the exact interval.
 
 ## `MP.CancelEventTimer(event_name: string)`
 
