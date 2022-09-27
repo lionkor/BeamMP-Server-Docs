@@ -363,6 +363,14 @@ Since v3.1.0, the second return value contains an error message if the function 
 
 Returns the amount of players currently in the server.
 
+## `MP.GetPositionRaw(pid: number, vid: number) -> table,string`
+
+Returns the current position of the vehicle `vid` (vehicle id) of player `pid` (player id), and an error string if an error occurred.
+
+The table is decoded from a position packet, so it has a variety of data (that's why this function is postfixed "Raw").
+
+TODO: Document fields. For now, users need to print() the result.
+
 ## `MP.IsPlayerConnected(player_id: number) -> boolean`
 
 // TODO Documentation incomplete
@@ -563,13 +571,6 @@ Creates a JSON diff according to RFC 6902 (http://jsonpatch.com/). This diff can
 
 Applies the JSON `diff` to `base` as a JSON patch (RFC 6902, http://jsonpatch.com/). Returns the result.
 
-## `MP.GetPositionRaw(pid: number, vid: number) -> table,string`
-
-Returns the current position of the vehicle `vid` (vehicle id) of player `pid` (player id), and an error string if an error occurred.
-
-The table is decoded from a position packet, so it has a variety of data (that's why this function is postfixed "Raw").
-
-TODO: Document fields. For now, users need to print() the result.
 
 # FS Functions
 
