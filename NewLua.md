@@ -132,12 +132,11 @@ Assuming you have the plugin from above which we called `MyPlugin`, you can ente
 ```
 
 Capitalisation matters here, so be careful its entered correctly. 
-The output is
+The output is something like
 ```
-Entered Lua console for state 'MyPlugin'. To exit, type `exit()`
 lua @MyPlugin> 
 ```
-As you can see, we switched into the Lua state for `MyPlugin`. From now on until we enter `exit()`, we will be in `MyPlugin` and can execute Lua there. 
+As you can see, we switched into the Lua state for `MyPlugin`. From now on until we enter `exit()` (as of v3.1.0 `:exit`), we will be in `MyPlugin` and can execute Lua there. 
 
 For example, if we have a global called `MyValue`, we can print that value like so:
 
@@ -145,7 +144,9 @@ For example, if we have a global called `MyValue`, we can print that value like 
 lua @MyPlugin> print(MyValue)
 ```
 
-You can call functions here and do anything you expect to be able to do. 
+You can call functions here and do anything you expect to be able to do.
+
+Since v3.1.0: You can press TAB to autocomplete functions and variables.
 
 WARNING: Sadly, if the Lua state is currently busy executing other code (like a `while` loop), this can fully hang the console until it finishes that work, so be very careful switching to states which may be waiting for something to happen.
 
@@ -551,6 +552,14 @@ Creates a JSON diff according to RFC 6902 (http://jsonpatch.com/). This diff can
 
 Applies the JSON `diff` to `base` as a JSON patch (RFC 6902, http://jsonpatch.com/). Returns the result.
 
+## `MP.GetPositionRaw(pid: number, vid: number) -> table,string`
+
+Returns the current position of the vehicle `vid` (vehicle id) of player `pid` (player id), and an error string if an error occurred.
+
+The table is decoded from a position packet, so it has a variety of data (that's why this function is postfixed "Raw").
+
+TODO: Document fields. For now, users need to print() the result.
+
 # FS Functions
 
 `FS` functions are **f**ile**s**ystem functions, which aim to be better than the default Lua capabilities.
@@ -759,6 +768,22 @@ Cancellable: YES
 Triggered when a player edits their vehicle and applies the edit. The `data` argument contains the car's change config as json. When cancelled, the edit is not applied.
 
 ### `onVehicleDeleted`
+ Lua, among other things.
+
+Custom Commands
+In order to implement custom commands for the server console, the event onConsoleInput can be used. This can be useful when you want to add a way for the server owner to signal something to your plugin, or to display internal state in a custom way.
+
+Here’s an example:
+
+function handleConsoleInput(cmd)
+    local delim = cmd:find(' ')
+    if delim then
+        local message = cmd:sub(delim+1)
+        if cmd:sub(1, delim-1) == "print" then
+            return message
+        end
+    end
+end
 
 Arguments: `player_id: number`, `vehicle_id: number`
 Cancellable: NO
@@ -771,6 +796,25 @@ Arguments: `player_id: number`, `vehicle_id: number`, `data: string`
 Cancellable: NO
 
 Triggered when a player resets their vehicle. `data` is the car's data as json.
+
+### `onFileChanged`
+
+*since v3.1.0*
+
+Arguments: `path: string`
+Cancellable: NO
+
+Triggered if a file changes in the `Resources/Server` directory *or any subdirectory of it*. 
+
+Any file change in the `Resources/Server/<plugin>` directory (not in a subfolder of it) will trigger a Lua state reload, and an `onFileChanged` event.
+
+Any file in subfolders of `Resources/Server/<plugin>`, such as `Resources/Server/<plugin>/lua/stuff.lua`, will not trigger a state reload and will only trigger an `onFileChanged` event. This way, you can reload it yourself in the correct way (or not reload it).
+
+This applies to all files, not just `.lua` files.
+
+The `path` is relative to the root of the server, for example `Resources/Server/myplugin/myfile.txt`. You can do further processing on this string with the `FS.*` family of functions, such as extracting the name or extension (`FS.GetExtension(...)`, `FS.GetFilename(...)`, ...).
+
+Note: Files added after the server is started are *not* tracked as of v3.1.0.
 
 # Migrating from old Lua
 
